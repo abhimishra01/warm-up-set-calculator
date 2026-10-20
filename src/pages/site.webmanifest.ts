@@ -5,7 +5,7 @@ import { url } from '../lib/url.ts';
 export const GET: APIRoute = () =>
   new Response(JSON.stringify({
     name: site.name,
-    short_name: 'Warm-up Sets',
+    short_name: 'Warm up Sets',
     description: 'Warm up sets with plates per side.',
     start_url: url(),
     scope: url(),

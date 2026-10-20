@@ -19,5 +19,6 @@ export default {
   locale: 'en-US',                    // BCP 47 language tag
   ogImage: '/og.png',
   category: 'HealthApplication',      // schema.org applicationCategory
+  updated: 'October 20, 2026',        // "Last updated" date on Privacy and Terms (fixed, change by hand)
   owner: 'Warm Up Set Calculator',                // name used in legal pages (person or business)
 };

@@ -4,10 +4,10 @@ import { ROUND_STEPS } from './warmup.js';
 
 // Plate dot colors follow competition plates: [fill, text].
 export const COLORS = {
-  lb: { '45': '#1d4ed8', '35': '#facc15', '25': '#16a34a', '10': '#f1f1ee', '5': '#dc2626', '2.5': '#475569', '1.25': '#a8a29e' },
-  kg: { '25': '#dc2626', '20': '#1d4ed8', '15': '#facc15', '10': '#16a34a', '5': '#f1f1ee', '2.5': '#475569', '1.25': '#a8a29e' },
+  lb: { '45': '#1d4ed8', '35': '#facc15', '25': '#16a34a', '10': '#f1f1ee', '5': '#dc2626', '2.5': '#64748b', '1.25': '#a8a29e' },
+  kg: { '25': '#dc2626', '20': '#1d4ed8', '15': '#facc15', '10': '#16a34a', '5': '#f1f1ee', '2.5': '#64748b', '1.25': '#a8a29e' },
 };
-export const QUICK = { lb: [95, 135, 185, 225, 275, 315, 405], kg: [60, 80, 100, 120, 140, 180] };
+export const QUICK = { lb: [95, 135, 185, 225, 315], kg: [60, 80, 100, 120, 140, 180] };
 
 const dot = (unit, w) => `<span class="dot" aria-hidden="true" style="background:${COLORS[unit][fmt(w)] || '#a8a29e'}"></span>`;
 
@@ -22,7 +22,10 @@ export function repsText(row) {
   return row.sets > 1 ? `${row.sets} &times; ${row.reps}` : String(row.reps);
 }
 
-const rowLabel = (row) => (row.kind === 'bar' ? 'Empty bar' : row.kind === 'work' ? 'Work set' : `${row.pct}%`);
+// Plain name of a row, shared with the copy text. A ramp row shows the percent that was asked for.
+export const rowName = (row) => (row.kind === 'bar' ? 'Empty bar' : row.kind === 'work' ? 'Work set' : `${row.asked ?? row.pct}%`);
+// The real percent differs from the asked one when rounding or plates move the load. Show both then.
+const rowLabel = (row) => (row.kind === 'ramp' && row.asked !== row.pct ? `${rowName(row)}<small class="actual">${row.pct}% actual</small>` : rowName(row));
 
 export function rowHtml(row, unit) {
   const work = row.kind === 'work' ? ' class="work-row"' : '';
@@ -34,7 +37,7 @@ export function rowHtml(row, unit) {
 
 export const rowsHtml = (res, unit) => res.rows.map((r) => rowHtml(r, unit)).join('');
 
-// "45 > 90 > 135 > 180 > 225 lb" for the summary line.
+// "45 → 90 → 135 → 180 → 225 lb" for the summary line.
 export const rampLine = (res, unit) => res.rows.map((r) => fmt(r.total)).join(' → ') + ` ${unit}`;
 
 export const chipsHtml = (unit) => QUICK[unit].map((w) => `<button type="button" class="chip" data-w="${w}">${w}</button>`).join('');
@@ -45,7 +48,7 @@ export function barGroupHtml(unit, selected) {
 }
 
 export function plateGroupHtml(unit, enabled) {
-  return PLATES[unit].map((w) => `<label><input type="checkbox" name="plate" value="${w}" class="peer sr-only"${enabled.includes(w) ? ' checked' : ''} /><span class="plate-pill">${dot(unit, w).replace('class="dot"', 'class="dot"')}${fmt(w)} ${unit}</span></label>`).join('');
+  return PLATES[unit].map((w) => `<label><input type="checkbox" name="plate" value="${w}" class="peer sr-only"${enabled.includes(w) ? ' checked' : ''} /><span class="plate-pill">${dot(unit, w)}${fmt(w)} ${unit}</span></label>`).join('');
 }
 
 export function roundGroupHtml(unit, selected) {

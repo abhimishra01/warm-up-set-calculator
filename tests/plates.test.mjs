@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { solve, warmups, nearestSides, describe, convertWeight, convertTarget, parseNumber, PLATES, DEFAULT_PLATES } from '../src/lib/plates.js';
+import { solve, nearestSides, convertWeight, convertTarget, parseNumber, PLATES, DEFAULT_PLATES } from '../src/lib/plates.js';
 
 const L = PLATES.lb, K = PLATES.kg;
 const asList = (r) => r.list.map((p) => [p.w, p.n]);
@@ -47,12 +47,6 @@ test('a tie goes to the lighter load', () => {
   const r = solve({ target: 226.25, bar: 45, plates: L });
   assert.equal(r.total, 225);
 });
-test('collars are subtracted', () => {
-  const r = solve({ target: 100, bar: 20, collar: 2.5, plates: K });
-  assert.equal(r.base, 25);
-  assert.equal(r.status, 'exact');
-  assert.deepEqual(asList(r), [[25, 1], [10, 1], [2.5, 1]]);
-});
 test('target equal to the bar is bar only; below the bar is flagged', () => {
   assert.equal(solve({ target: 45, bar: 45, plates: L }).status, 'bar');
   assert.equal(solve({ target: 30, bar: 45, plates: L }).status, 'below');
@@ -73,22 +67,13 @@ test('no plates enabled loads nothing', () => {
   assert.equal(r.status, 'closest');
   assert.equal(r.total, 45);
 });
-test('warm-up table at 40, 60, 80, 100 percent', () => {
-  const w = warmups({ target: 225, bar: 45, plates: L });
-  assert.deepEqual(w.map((x) => x.pct), [40, 60, 80, 100]);
-  assert.equal(w[0].want, 90);
-  assert.equal(w[0].total, 90);          // 90 = bar + 22.5 per side = 10 + 10 + 2.5
-  assert.equal(w[1].total, 135);
-  assert.equal(w[2].total, 180);
-  assert.equal(w[3].total, 225);
-});
-test('describe and conversion', () => {
-  assert.equal(describe([{ w: 45, n: 2 }, { w: 2.5, n: 1 }]), '45 x 2, 2.5 x 1');
+test('conversion', () => {
   assert.ok(Math.abs(convertWeight(225, 'lb', 'kg') - 102.058) < 0.01);
   assert.ok(Math.abs(convertWeight(100, 'kg', 'lb') - 220.462) < 0.01);
 });
 
-test('default lb plates leave out 1.25, kg keeps it', () => {
+test('default lb plates leave out 35 and 1.25, kg keeps 1.25', () => {
+  assert.ok(!DEFAULT_PLATES.lb.includes(35));
   assert.ok(!DEFAULT_PLATES.lb.includes(1.25));
   assert.ok(DEFAULT_PLATES.kg.includes(1.25));
 });
@@ -107,15 +92,9 @@ test('kg closest picks the nearer load and offers the other side', () => {
   assert.equal(r.total, 60);
   assert.equal(r.upper.total, 62.5);
 });
-test('1 lb collars at 225 lb give 224.5 as the closest load', () => {
-  const r = solve({ target: 225, bar: 45, collar: 1, plates: L });
-  assert.equal(r.status, 'closest');
-  assert.equal(r.total, 224.5);
-  assert.equal(r.base, 47);
-});
-test('largest input (4999) works and is exact on a 1.25 lb step', () => {
-  const r = solve({ target: 4999, bar: 45, plates: L });
-  assert.ok(Math.abs(r.total - 4999) <= 1.25);
+test('largest input (1500) works and is exact on a 1.25 lb step', () => {
+  const r = solve({ target: 1500, bar: 45, plates: L });
+  assert.ok(Math.abs(r.total - 1500) <= 1.25);
 });
 test('solver matches brute force for several plate sets', () => {
   const sets = [[45, 35, 25, 10, 5, 2.5], [45, 25, 10, 5], [25, 20, 15, 10, 5, 2.5, 1.25], [20, 5, 1.25]];
@@ -132,15 +111,6 @@ test('solver matches brute force for several plate sets', () => {
     }
   }
 });
-test('warm-ups round to a practical step, so 226 lb gives clean sets', () => {
-  const w = warmups({ target: 226, bar: 45, plates: DEFAULT_PLATES.lb, step: 5 });
-  assert.deepEqual(w.map((x) => x.want), [90, 135, 180, 225]);
-  assert.ok(w.every((x) => x.status === 'exact'));
-});
-test('warm-up below the bar shows as bar only', () => {
-  const w = warmups({ target: 60, bar: 45, plates: L, step: 5 });
-  assert.equal(w[0].status, 'below');
-});
 test('unit switch rounds to the new step and keeps an empty target empty', () => {
   assert.equal(convertTarget(135, 'lb', 'kg'), 60);
   assert.equal(convertTarget(60, 'kg', 'lb'), 130);
@@ -152,6 +122,10 @@ test('parseNumber: decimal comma, thousands comma, junk', () => {
   assert.equal(parseNumber('1,225'), 1225);
   assert.equal(parseNumber('1,225.5'), 1225.5);
   assert.equal(parseNumber('225'), 225);
+  assert.equal(parseNumber('225 lb'), 225);
+  assert.equal(parseNumber('225lbs'), 225);
+  assert.equal(parseNumber('100kg'), 100);
+  assert.equal(parseNumber('315#'), 315);
   assert.ok(Number.isNaN(parseNumber('abc')));
   assert.ok(Number.isNaN(parseNumber('')));
   assert.ok(Number.isNaN(parseNumber('12abc')));

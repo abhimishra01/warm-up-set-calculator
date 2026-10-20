@@ -2,7 +2,7 @@
 import Page from '../layouts/Page.astro';
 import site from '../site.config.ts';
 import { url } from '../lib/url.ts';
-const updated = 'October 20, 2026';
+const updated = site.updated;
 ---
 <Page title="Terms of Use" description={`Terms of use for ${site.name}.`}>
   <p>Last updated: {updated}</p>

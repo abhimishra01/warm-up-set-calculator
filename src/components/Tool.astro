@@ -1,12 +1,12 @@
 ---
-// Warm-up set calculator UI. Logic lives in src/lib/warmup.js and src/lib/plates.js (tested by npm test).
+// Warm up set calculator UI. Logic lives in src/lib/warmup.js and src/lib/plates.js (tested by npm test).
 // The first paint (225 lb, strength ramp) is built here, so the page has content before any script runs.
 import site from '../site.config.ts';
 import { DEFAULT_PLATES } from '../lib/plates.js';
 import { PRESETS, buildWarmups } from '../lib/warmup.js';
 import { rowsHtml, rampLine, chipsHtml, barGroupHtml, plateGroupHtml, roundGroupHtml } from '../lib/render.js';
 
-const first = buildWarmups({ work: 225, bar: 45, plates: DEFAULT_PLATES.lb, steps: PRESETS.strength.steps, step: 5 });
+const first = buildWarmups({ work: 225, bar: 45, plates: DEFAULT_PLATES.lb, steps: PRESETS.strength.steps, step: 5, minGap: PRESETS.strength.minGap.lb });
 const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.label })), { id: 'custom', label: 'Custom' }];
 ---
 <section id="tool" aria-label="Warm up set calculator" data-domain={site.domain} class="rounded-2xl border border-line bg-card p-4 sm:p-6 sm:shadow-[6px_6px_0_0_var(--line)]">
@@ -28,7 +28,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
           <label for="work" class="mb-2 block text-sm font-semibold">Work weight, bar included <span id="unit-label" class="font-normal text-muted">(lb)</span></label>
           <div class="flex items-stretch gap-2">
             <button type="button" id="dec" class="step" aria-label="Subtract one step from the work weight">&minus;</button>
-            <input id="work" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="225" aria-describedby="result-status"
+            <input id="work" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" value="225" aria-describedby="result-status"
               class="h-14 min-w-0 flex-1 rounded-xl border border-edge bg-paper px-3 text-center font-mono text-3xl font-bold tabular-nums outline-none focus:border-brand focus:ring-2 focus:ring-brand/30 aria-[invalid=true]:border-red-600" />
             <button type="button" id="inc" class="step" aria-label="Add one step to the work weight">+</button>
           </div>
@@ -36,7 +36,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
         </div>
 
         <fieldset>
-          <legend class="mb-2 text-sm font-semibold">Warm-up style</legend>
+          <legend class="mb-2 text-sm font-semibold">Warm up style</legend>
           <div class="grid grid-cols-2 gap-2" id="preset-group">
             {presetList.map((p) => (
               <label class="seg"><input type="radio" name="preset" value={p.id} class="peer sr-only" checked={p.id === 'strength'} /><span class="seg-face">{p.label}</span></label>
@@ -45,7 +45,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
           <p id="preset-note" class="mt-2 min-h-[2.5rem] text-sm text-muted">{PRESETS.strength.note}</p>
           <div id="custom-wrap" class="mt-1 hidden">
             <label for="custom-pcts" class="mb-1 block text-sm font-semibold">Percents of the work weight</label>
-            <input id="custom-pcts" type="text" inputmode="decimal" autocomplete="off" value="40, 60, 80" aria-describedby="custom-help"
+            <input id="custom-pcts" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="40, 60, 80" aria-describedby="custom-help"
               class="h-12 w-full rounded-xl border border-edge bg-paper px-3 font-mono text-lg font-semibold tabular-nums outline-none focus:border-brand focus:ring-2 focus:ring-brand/30 aria-[invalid=true]:border-red-600" />
             <p id="custom-help" class="mt-1 text-xs text-muted">Numbers from 1 to 99, up to 8, separated by commas or spaces.</p>
           </div>
@@ -58,7 +58,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
           <div class="flex flex-wrap gap-2" id="bar-group" set:html={barGroupHtml('lb', '45')}></div>
           <div id="custom-bar-wrap" class="mt-2 hidden items-center gap-2">
             <label for="custom-bar" class="text-sm text-muted">Bar weight</label>
-            <input id="custom-bar" type="text" inputmode="decimal" autocomplete="off" value="25"
+            <input id="custom-bar" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="25"
               class="h-12 w-28 rounded-xl border border-edge bg-paper px-3 text-center font-mono text-lg font-semibold tabular-nums outline-none focus:border-brand focus:ring-2 focus:ring-brand/30 aria-[invalid=true]:border-red-600" />
             <span id="custom-bar-unit" class="text-sm text-muted">lb</span>
           </div>
@@ -71,7 +71,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
         </fieldset>
 
         <fieldset>
-          <legend class="mb-1 text-sm font-semibold">Round each warm-up to</legend>
+          <legend class="mb-1 text-sm font-semibold">Round each warm up set to</legend>
           <p class="mb-2 text-sm text-muted">The weight is rounded first, then matched to the closest load your plates make.</p>
           <div class="flex flex-wrap gap-2" id="round-group" set:html={roundGroupHtml('lb', 5)}></div>
         </fieldset>
@@ -85,9 +85,9 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
         <p id="print-sub" class="mb-3 text-sm"></p>
       </div>
       <div class="min-h-[10.5rem] rounded-xl bg-brand-soft p-4 print:hidden" id="result-box">
-        <p class="text-sm font-semibold uppercase tracking-wide text-brand-ink">Your warm-up</p>
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-ink">Your warm up</p>
         <p id="ramp-line" class="mt-1 min-h-[2.75rem] break-words font-mono text-xl font-bold leading-snug tabular-nums sm:text-2xl">{rampLine(first, 'lb')}</p>
-        <p id="result-status" role="status" aria-live="polite" class="mt-2 min-h-[3rem] text-base font-medium">{first.rows.length - 1} steps, then your 225 lb work set. Bar 45 lb.</p>
+        <p id="result-status" role="status" aria-live="polite" class="mt-2 min-h-[3rem] text-base font-medium">Empty bar, {first.rows.length - 2} warm up sets, then your 225&nbsp;lb work set. Bar 45&nbsp;lb.</p>
         <div class="mt-2 flex flex-wrap gap-2">
           <button type="button" id="copy" class="alt-btn">Copy as text</button>
           <button type="button" id="print" class="alt-btn">Print</button>
@@ -96,7 +96,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
 
       <div id="table-wrap" class="mt-4 overflow-x-auto rounded-xl border border-line print:mt-0" style="min-height:var(--table-h,20rem)">
         <table class="w-full text-left text-sm">
-          <caption class="sr-only">Warm-up sets: weight, plates per side and reps for each step, ending with the work set</caption>
+          <caption class="sr-only">Warm up sets: weight, plates per side and reps for each set, ending with the work set</caption>
           <thead class="bg-brand-soft text-xs uppercase tracking-wide text-brand-ink">
             <tr><th scope="col" class="px-2.5 py-2 font-semibold sm:px-3">Set</th><th scope="col" class="px-2.5 py-2 font-semibold sm:px-3">Weight</th><th scope="col" class="px-2.5 py-2 font-semibold sm:px-3">Plates per side</th><th scope="col" class="px-2.5 py-2 font-semibold sm:px-3">Reps</th></tr>
           </thead>
@@ -108,6 +108,12 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     </div>
   </div>
 </section>
+
+<!-- Phone only: keeps the ramp in view when the result box has scrolled away. -->
+<button type="button" id="sticky-bar" hidden class="sticky-bar print:hidden" aria-label="Warm up sets. Tap to see the table.">
+  <span class="sticky-label">Warm up</span>
+  <span id="sticky-ramp" class="sticky-ramp">{rampLine(first, 'lb')}</span>
+</button>
 
 <style is:global>
   .seg-face { display:flex; min-height:3rem; align-items:center; justify-content:center; border-radius:.75rem; border:1px solid var(--edge); background:var(--paper); padding:.5rem .9rem; font-weight:600; font-size:.95rem; cursor:pointer; text-align:center; transition:background-color .12s,border-color .12s; user-select:none; }
@@ -127,6 +133,13 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   .peer:focus-visible + .plate-pill { outline:2px solid var(--brand-ink); outline-offset:2px; }
   .alt-btn { min-height:2.75rem; padding:.4rem .9rem; border-radius:.75rem; border:1px solid var(--brand); background:var(--card); font-weight:600; font-size:.95rem; color:var(--brand-ink); cursor:pointer; }
   .alt-btn:hover { background: var(--brand); color:#fff; }
+  .sticky-bar { position:fixed; left:0; right:0; bottom:0; z-index:30; display:none; align-items:center; gap:.75rem; width:100%; min-height:3.25rem; padding:.55rem 1rem calc(.55rem + env(safe-area-inset-bottom)); border:0; border-top:2px solid var(--edge); background:var(--brand-soft); color:var(--ink); text-align:left; cursor:pointer; touch-action:manipulation; }
+  .sticky-bar:not([hidden]) { display:flex; }
+  .sticky-label { flex:none; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--brand-ink); }
+  .sticky-ramp { min-width:0; font-family:var(--font-mono); font-size:1rem; font-weight:700; line-height:1.25; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  @media (min-width:768px) { .sticky-bar, .sticky-bar:not([hidden]) { display:none; } }
+  .actual { display:block; font-size:.7rem; font-weight:500; color:var(--muted); letter-spacing:0; }
+  .seg-face, .step, .chip, .plate-pill, .alt-btn { touch-action:manipulation; }
   .dot { width:1rem; height:1rem; display:inline-block; border-radius:999px; border:2px solid rgba(0,0,0,.35); flex:none; }
   .side-item { display:inline-flex; align-items:center; gap:.3rem; font-weight:600; white-space:nowrap; }
   .side-item small { font-size:.8rem; color:var(--muted); font-weight:600; }
@@ -136,7 +149,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     @page { margin: 14mm; }
     html, body, #tool, #tool *:not(.dot) { background:#fff !important; color:#000 !important; box-shadow:none !important; text-shadow:none !important; }
     body::before { display:none !important; }
-    header, footer, .no-print { display:none !important; }
+    header, footer, .sticky-bar { display:none !important; }
     main > *:not(:first-child), main > section:first-child > h1, main > section:first-child > p, main > section:first-child > aside { display:none !important; }
     main > section:first-child { padding-top:0 !important; }
     main > section:first-child > div { min-height:0 !important; margin-top:0 !important; }
@@ -145,50 +158,27 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     #table-wrap { min-height:0 !important; border:2px solid #000 !important; border-radius:0 !important; }
     #tool table, #tool th, #tool td { border-color:#000 !important; font-size:14pt; }
     #tool thead th { border-bottom:2px solid #000 !important; }
+    .actual { color:#000 !important; }
     #tool tr { border-color:#000 !important; }
     .work-row th, .work-row td { font-weight:800; }
     #warm-note { font-size:10pt; }
   }
 </style>
 <script>
-  import { PLATES, DEFAULT_PLATES, BARS, STEP, MAX_TARGET, parseNumber, convertTarget, fmt } from '../lib/plates.js';
+  import { STEP, MAX_WORK, parseNumber, convertTarget, fmt } from '../lib/plates.js';
   import { PRESETS, ROUND_STEPS, buildWarmups, parsePercents } from '../lib/warmup.js';
-  import { rowsHtml, rampLine, chipsHtml, barGroupHtml, plateGroupHtml, roundGroupHtml } from '../lib/render.js';
+  import { rowsHtml, rampLine, rowName, chipsHtml, barGroupHtml, plateGroupHtml, roundGroupHtml } from '../lib/render.js';
+  import { loadState, DEFAULT_CUSTOM_BAR } from '../lib/state.js';
 
   type Unit = 'lb' | 'kg';
-  const DEFAULT_CUSTOM: Record<Unit, number> = { lb: 25, kg: 10 };
   const KEY = 'warm-up-set-calc-v1'; // one origin is shared by all tools on GitHub Pages, so the key is specific
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const show = (id: string, on: boolean) => { $(id).classList.toggle('hidden', !on); $(id).classList.toggle('flex', on); };
-  const isWeight = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= MAX_TARGET;
   const domain = $('tool').dataset.domain || '';
 
-  const state = {
-    unit: 'lb' as Unit,
-    work: 225,
-    preset: 'strength' as string,
-    custom: '40, 60, 80',
-    bar: { lb: '45', kg: '20' } as Record<Unit, string>,
-    customBar: { ...DEFAULT_CUSTOM } as Record<Unit, number>,
-    plates: { lb: [...DEFAULT_PLATES.lb], kg: [...DEFAULT_PLATES.kg] } as Record<Unit, number[]>,
-    round: { lb: ROUND_STEPS.lb[0], kg: ROUND_STEPS.kg[0] } as Record<Unit, number>,
-  };
-
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved && typeof saved === 'object') {
-      if (saved.unit === 'lb' || saved.unit === 'kg') state.unit = saved.unit;
-      if (isWeight(saved.work) && saved.work > 0) state.work = saved.work;
-      if (saved.preset === 'custom' || saved.preset in PRESETS) state.preset = saved.preset;
-      if (typeof saved.custom === 'string') state.custom = saved.custom.slice(0, 60);
-      for (const u of ['lb', 'kg'] as Unit[]) {
-        if (saved.bar && typeof saved.bar[u] === 'string' && (saved.bar[u] === 'custom' || (BARS[u] as number[]).map(String).includes(saved.bar[u]))) state.bar[u] = saved.bar[u];
-        if (saved.customBar && isWeight(saved.customBar[u])) state.customBar[u] = saved.customBar[u];
-        if (saved.plates && Array.isArray(saved.plates[u])) state.plates[u] = saved.plates[u].filter((w: unknown) => (PLATES[u] as number[]).includes(w as number));
-        if (saved.round && (ROUND_STEPS[u] as number[]).includes(saved.round[u])) state.round[u] = saved.round[u];
-      }
-    }
-  } catch {}
+  let saved: unknown = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch {}
+  const state = loadState(saved);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
 
   // The last number the person chose, so a unit round trip returns to it (225 lb, 100 kg, 225 lb).
@@ -200,6 +190,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     const id = state.bar[state.unit];
     return id === 'custom' ? state.customBar[state.unit] : Number(id);
   };
+  const maxWork = () => MAX_WORK[state.unit];
 
   function buildStatic() {
     const u = state.unit;
@@ -230,10 +221,11 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     const work = state.work;
     const plates = state.plates[u];
     const status = $('result-status');
-    const badBar = !Number.isFinite(bar);
+    const badBar = !(bar > 0);
     const custom = state.preset === 'custom';
     const pcts = custom ? parsePercents(state.custom) : [];
     const steps = currentSteps();
+    const minGap = state.preset === 'custom' ? 0 : PRESETS[state.preset as keyof typeof PRESETS].minGap[u];
 
     // Keep the table height for this preset so the page does not jump while you type.
     const maxRows = steps.length + 1;
@@ -241,31 +233,36 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
 
     $('warm-note').textContent = 'Plates per side are for one end of the bar. Load the other end the same way. Rep counts are a guide, not a rule.';
     let res: any = { status: 'empty', rows: [] };
-    if (!badBar) res = buildWarmups({ work, bar, plates, steps, step: state.round[u] });
+    if (!badBar) res = buildWarmups({ work, bar, plates, steps, step: state.round[u], minGap });
 
     let line = '-';
     let text = '';
     if (badBar) text = 'Enter the bar weight to see the sets.';
     else if (res.status === 'empty') text = 'Enter a work weight above 0 to see the sets.';
     else if (res.status === 'noplates') text = 'Turn on at least one plate size.';
-    else if (res.status === 'light') text = `Your work weight is at or under the bar (${fmt(bar)} ${u}), or your plates cannot add weight above it. Lift the bar for your warm-up.`;
+    else if (res.status === 'light') {
+      text = work <= bar
+        ? `Your work weight is at or under the bar (${fmt(bar)}\u00a0${u}). Lift the bar for your warm up.`
+        : `Your plates cannot add weight to the ${fmt(bar)}\u00a0${u} bar at ${fmt(work)}\u00a0${u}. Turn on a smaller plate.`;
+    }
     else {
       const ramp = res.rows.filter((r: any) => r.kind === 'ramp').length;
-      const word = (n: number) => `${n} ${n === 1 ? 'step' : 'steps'}`;
+      const word = (n: number) => `${n} ${n === 1 ? 'warm up set' : 'warm up sets'}`;
       line = rampLine(res, u);
       text = res.status === 'exact'
-        ? `Empty bar, ${word(ramp)}, then your ${fmt(res.work)} ${u} work set. Bar ${fmt(bar)} ${u}.`
+        ? `Empty bar, ${word(ramp)}, then your ${fmt(res.work)}\u00a0${u} work set. Bar ${fmt(bar)}\u00a0${u}.`
         : `Your plates cannot make ${fmt(work)} ${u}. The closest load is ${fmt(res.work)} ${u}, so the ramp uses that. Bar ${fmt(bar)} ${u}.`;
-      if (custom && !pcts.length) text += ' Add percents to get more steps.';
+      if (custom && !pcts.length) text += ' Add percents to get more sets.';
     }
     $('ramp-line').textContent = line;
+    $('sticky-ramp').textContent = line;
     status.textContent = text;
 
     // Table
     tableRows = res.rows.length;
     $('warm').innerHTML = tableRows ? rowsHtml(res, u) : '<tr><td colspan="4" class="px-3 py-6 text-center text-muted">No sets to show yet.</td></tr>';
     const rounded = res.rows.some((r: any) => r.kind === 'ramp');
-    if (rounded) $('warm-note').textContent += ` Each step is rounded to ${fmt(state.round[u])} ${u}, then to the closest load your plates make.`;
+    if (rounded) $('warm-note').textContent += ` Each set is rounded to ${fmt(state.round[u])} ${u}, then to the closest load your plates make.`;
 
     // Print header and copy text
     const label = custom ? 'Custom' : PRESETS[state.preset as keyof typeof PRESETS].label;
@@ -274,19 +271,20 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     lastText = tableRows
       ? [`Warm up sets for ${fmt(res.work)} ${u} (bar ${fmt(bar)} ${u}, ${label} style)`,
          ...res.rows.map((r: any) => {
-           const nm = r.kind === 'bar' ? 'Empty bar' : r.kind === 'work' ? 'Work set' : `${r.pct}%`;
-           const side = r.list.length ? r.list.map((p: any) => `${fmt(p.w)}${p.n > 1 ? ` x${p.n}` : ''}`).join(' + ') : 'bar only';
+           const nm = rowName(r);
+           const side = r.list.length ? r.list.map((p: any) => `${fmt(p.w)}${p.n > 1 ? ` x${p.n}` : ''}`).join(' + ') : 'empty bar';
            const reps = r.kind === 'work' || !r.reps ? '' : `, ${r.sets > 1 ? `${r.sets} x ` : ''}${r.reps} reps`;
-           return `${nm}: ${fmt(r.total)} ${u} (${side} per side)${reps}`;
+           return `${nm}: ${fmt(r.total)} ${u} (${side}${r.list.length ? ' per side' : ''})${reps}`;
          }), domain].join('\n')
       : '';
     $('copy-status').textContent = '';
     save();
+    syncBar();
   }
 
   function setWork(v: number) {
     if (!(v > 0)) return;
-    state.work = Math.min(v, MAX_TARGET);
+    state.work = Math.min(v, maxWork());
     anchor = { unit: state.unit, work: state.work };
     $<HTMLInputElement>('work').value = fmt(state.work);
     $('work').removeAttribute('aria-invalid');
@@ -299,8 +297,8 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   workEl.addEventListener('input', () => {
     const v = parseNumber(workEl.value);
     workEl.setAttribute('aria-invalid', String(workEl.value.trim() !== '' && !(v > 0)));
-    state.work = v > 0 ? Math.min(v, MAX_TARGET) : 0;
-    if (v > MAX_TARGET) workEl.value = fmt(MAX_TARGET);
+    state.work = v > 0 ? Math.min(v, maxWork()) : 0;
+    if (v > maxWork()) workEl.value = fmt(maxWork());
     anchor = { unit: state.unit, work: state.work };
     render();
   });
@@ -318,7 +316,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   $('unit-group').addEventListener('change', (e) => {
     const to = (e.target as HTMLInputElement).value as Unit;
     if (to === state.unit) return;
-    state.work = anchor.unit === to && anchor.work > 0 ? anchor.work : convertTarget(state.work, state.unit, to);
+    state.work = Math.min(anchor.unit === to && anchor.work > 0 ? anchor.work : convertTarget(state.work, state.unit, to), MAX_WORK[to]);
     state.unit = to;
     buildStatic(); render();
   });
@@ -340,12 +338,12 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   const barEl = $<HTMLInputElement>('custom-bar');
   barEl.addEventListener('input', () => {
     const v = parseNumber(barEl.value);
-    state.customBar[state.unit] = v <= MAX_TARGET ? v : NaN;
+    state.customBar[state.unit] = v > 0 && v <= maxWork() ? v : NaN;
     barEl.setAttribute('aria-invalid', String(!Number.isFinite(state.customBar[state.unit])));
     render();
   });
   barEl.addEventListener('blur', () => {
-    if (!Number.isFinite(state.customBar[state.unit])) { state.customBar[state.unit] = DEFAULT_CUSTOM[state.unit]; render(); }
+    if (!Number.isFinite(state.customBar[state.unit])) { state.customBar[state.unit] = DEFAULT_CUSTOM_BAR[state.unit]; render(); }
     barEl.value = fmt(state.customBar[state.unit]);
     barEl.removeAttribute('aria-invalid');
   });
@@ -372,6 +370,19 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
       out.textContent = ok ? 'Copied. Paste it into your notes or a message.' : 'Copy did not work here. Select the table and copy it.';
     }
   });
+
+  // Sticky result bar (phones). Show it while the tool is on screen and the result box has scrolled out of view.
+  const stickyEl = $('sticky-bar');
+  const boxEl = $('result-box');
+  const toolEl = $('tool');
+  let boxVisible = true;
+  let toolVisible = false;
+  const syncBar = () => { stickyEl.hidden = boxVisible || !toolVisible || !tableRows; };
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((e) => { boxVisible = e[e.length - 1].isIntersecting; syncBar(); }).observe(boxEl);
+    new IntersectionObserver((e) => { toolVisible = e[e.length - 1].isIntersecting; syncBar(); }, { threshold: 0 }).observe(toolEl);
+  }
+  stickyEl.addEventListener('click', () => $('table-wrap').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
 
   buildStatic();
   render();

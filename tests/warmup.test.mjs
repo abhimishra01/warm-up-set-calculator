@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { buildWarmups, parsePercents, roundToStep, PRESETS, ROUND_STEPS } from '../src/lib/warmup.js';
 import { solve, DEFAULT_PLATES } from '../src/lib/plates.js';
 
-const LB = DEFAULT_PLATES.lb; // 45 35 25 10 5 2.5
+const LB = DEFAULT_PLATES.lb; // 45 25 10 5 2.5
 const KG = DEFAULT_PLATES.kg; // 25 20 15 10 5 2.5 1.25
 const totals = (r) => r.rows.map((x) => x.total);
 const sideOf = (list) => list.reduce((a, p) => a + p.w * p.n, 0);
@@ -96,7 +96,7 @@ test('custom percent text', () => {
 test('presets are well formed', () => {
   assert.deepEqual(PRESETS.strength.steps.map((s) => s.pct), [0, 40, 60, 80]);
   assert.deepEqual(PRESETS.hypertrophy.steps.map((s) => s.pct), [0, 50, 75]);
-  assert.deepEqual(PRESETS.powerlifting.steps.map((s) => s.pct), [0, 50, 65, 75, 85, 90]);
+  assert.deepEqual(PRESETS.powerlifting.steps.map((s) => s.pct), [0, 30, 50, 65, 75, 85, 90]);
   for (const p of Object.values(PRESETS)) {
     const pcts = p.steps.map((s) => s.pct);
     assert.deepEqual(pcts, [...pcts].sort((a, b) => a - b));
@@ -125,4 +125,49 @@ test('every row is a real load: bar + 2 x plates per side, strictly rising, ends
       }
     }
   }
+});
+
+const ramp = (work, key, unit = 'lb') => buildWarmups({ work, bar: unit === 'lb' ? 45 : 20, plates: unit === 'lb' ? LB : KG, steps: PRESETS[key].steps, step: unit === 'lb' ? 5 : 2.5, minGap: PRESETS[key].minGap[unit] });
+
+test('powerlifting 405 lb has no big jump after the bar (30 percent set added)', () => {
+  // 30% 121.5 -> 120; 50% 202.5 -> 205; 65% 263.25 -> 265; 75% 303.75 -> 305; 85% 344.25 -> 345; 90% 364.5 -> 365
+  assert.deepEqual(totals(ramp(405, 'powerlifting')), [45, 120, 205, 265, 305, 345, 365, 405]);
+});
+
+test('powerlifting 135 lb drops sets closer than 20 lb: no 5 lb steps', () => {
+  // raw 70, 90, 100, 115, 120 -> 100 is 10 above 90, 120 is 15 under the work set: both dropped
+  assert.deepEqual(totals(ramp(135, 'powerlifting')), [45, 70, 90, 115, 135]);
+});
+
+test('powerlifting 95 lb is short', () => {
+  assert.deepEqual(totals(ramp(95, 'powerlifting')), [45, 70, 95]);
+});
+
+test('strength keeps the Starting Strength sets at 135 lb (55, 80, 110)', () => {
+  assert.deepEqual(totals(ramp(135, 'strength')), [45, 55, 80, 110, 135]);
+});
+
+test('minGap in kg: powerlifting jumps are at least 10 kg after the first set', () => {
+  const t = totals(ramp(100, 'powerlifting', 'kg'));
+  for (let i = 1; i < t.length; i++) assert.ok(t[i] - t[i - 1] >= 10, `${t[i - 1]} to ${t[i]}`);
+  assert.deepEqual(totals(ramp(100, 'strength', 'kg')), [20, 40, 60, 80, 100]);
+});
+
+test('when the work weight is not loadable, percents come from the loaded weight', () => {
+  // plates make 5 lb steps. 457 lb -> 455 lb loaded. 40% of 455 = 182 -> 180, not 40% of 457 = 182.8 -> 185
+  const r = buildWarmups({ work: 457, bar: 45, plates: LB, steps: PRESETS.strength.steps, step: 5 });
+  assert.equal(r.work, 455);
+  assert.equal(r.rows[1].total, 180);
+  assert.equal(r.rows[1].pct, 40);
+});
+
+test('rows keep the asked percent and the real percent', () => {
+  const r = buildWarmups({ work: 135, bar: 45, plates: LB, steps: PRESETS.strength.steps, step: 5 });
+  const row = r.rows[1]; // 40% of 135 = 54 -> 55, real 41%
+  assert.equal(row.asked, 40);
+  assert.equal(row.pct, 41);
+});
+
+test('a bar and plates that add nothing gives the light status', () => {
+  assert.equal(buildWarmups({ work: 46, bar: 45, plates: [45], steps: PRESETS.strength.steps, step: 5 }).status, 'light');
 });
