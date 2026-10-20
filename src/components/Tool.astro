@@ -356,7 +356,10 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     render();
   });
 
-  $('print').addEventListener('click', () => { if (tableRows) window.print(); });
+  $('print').addEventListener('click', () => {
+    if (!tableRows) { $('copy-status').textContent = 'Nothing to print yet.'; return; }
+    window.print();
+  });
   $('copy').addEventListener('click', async () => {
     const out = $('copy-status');
     if (!lastText) { out.textContent = 'Nothing to copy yet.'; return; }
