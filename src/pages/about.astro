@@ -1,0 +1,17 @@
+---
+import Page from '../layouts/Page.astro';
+import site from '../site.config.ts';
+import { url } from '../lib/url.ts';
+---
+<Page title="About" description={`About ${site.name}: a free warm up set calculator for lifters.`}>
+  <p>{site.name} turns your work weight into a ramp of warm up sets. It starts with the empty bar, adds weight in steps, and shows the plates to load on each side. It works in pounds and kilograms, with any bar and any set of plates.</p>
+  <h2>What it does</h2>
+  <p>It answers as you type. It rounds every set to a weight your plates can make, and drops steps that repeat or fall under the bar. You can copy the sets as text or print a clean sheet.</p>
+  <h2>How it works</h2>
+  <p>Each step is your work weight times a percent. The tool rounds it to 5 lb or 2.5 kg (you can change this), then finds the fewest plates that make the closest loadable weight. The three styles (powerlifting, strength and hypertrophy) are common starting points. No standard warm-up exists, so change them to suit you.</p>
+  <p>The calculator runs in your browser and does not send what you type. We do not ask you to create an account. Your settings stay on your device.</p>
+  <h2>A note on safety</h2>
+  <p>This tool does arithmetic. It is not medical advice or coaching. Check your equipment, use collars, and ask for a spotter on heavy sets.</p>
+  <h2>Contact</h2>
+  <p>Questions or ideas? Write to <a href={`mailto:${site.email}`}>{site.email}</a> or visit the <a href={url('contact/')}>Contact page</a>.</p>
+</Page>

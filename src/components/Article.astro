@@ -1,0 +1,85 @@
+---
+// SEO article. The example and the table are computed with the same code as the tool, so they cannot drift.
+import { DEFAULT_PLATES, fmt } from '../lib/plates.js';
+import { PRESETS, buildWarmups } from '../lib/warmup.js';
+
+const ramp = (work, preset = 'strength') => buildWarmups({ work, bar: 45, plates: DEFAULT_PLATES.lb, steps: PRESETS[preset].steps, step: 5 });
+const example = ramp(225);
+const sideText = (list) => list.map((p) => `${fmt(p.w)} lb${p.n > 1 ? ` x ${p.n}` : ''}`).join(' + ');
+const table = [135, 185, 225, 275, 315, 365, 405].map((w) => ({ work: w, steps: ramp(w).rows.map((r) => fmt(r.total)).join(', ') }));
+---
+<section aria-labelledby="about-tool" class="mx-auto max-w-5xl px-4 pt-16">
+  <article class="prose-site">
+    <h2 id="about-tool" style="margin-top:0">What a warm up set calculator does</h2>
+    <p>A warm up set calculator turns one number, your work weight, into a ramp of lighter sets. You start with the empty bar. Each set adds weight until you reach the load you came to lift. The tool does the percent math, rounds every set to a weight your plates can make, and shows the plates for each side of the bar.</p>
+    <p>Doing this in your head is slow between sets. Is 60 percent of 275 lb a 165 or a 170? Which plates make it? This page answers as you type, so you can plan the whole ramp before you chalk up.</p>
+
+    <h2>How to use the calculator</h2>
+    <ol>
+      <li>Pick pounds or kilograms.</li>
+      <li>Type your work weight, with the bar included. Or tap a common weight.</li>
+      <li>Pick a warm-up style: powerlifting, strength or hypertrophy. Choose Custom to type your own percents.</li>
+      <li>Choose your bar. A standard men's bar is 45 lb or 20 kg. Many women's bars are 35 lb or 15 kg.</li>
+      <li>Turn off any plate your gym does not have. Then pick how finely to round each set.</li>
+      <li>Read the table, tap Copy as text, or tap Print to take the sheet to the gym.</li>
+    </ol>
+
+    <h2>How each set is worked out</h2>
+    <p>Each warm-up weight is your work weight times a percent, divided by 100. The tool rounds that number to your chosen step, 5 lb or 2.5 kg by default. Then it finds the closest load your plates can build. Plates per side are the total, minus the bar, divided by 2.</p>
+    <p>The result never repeats a weight, and it never goes above your work set. If a step would land on the bar, or on the set before it, the tool drops it. If your plates cannot make your exact work weight, the tool says so and uses the closest load. Kilogram and pound entries convert with one pound equal to exactly 0.45359237 kg, the value set by the 1959 international yard and pound agreement.</p>
+
+    <h2>The three warm-up styles</h2>
+    <p>No standard warm-up exists. Coaches differ, and the best ramp depends on your lift, your fatigue and your goal. These presets are common starting points. Change them if they do not suit you.</p>
+    <div class="table-wrap" style="max-width:36rem">
+      <table>
+        <thead><tr><th scope="col">Style</th><th scope="col">Steps after the bar</th><th scope="col">Best for</th></tr></thead>
+        <tbody>
+          <tr><td>Powerlifting</td><td>50, 65, 75, 85, 90%</td><td>Heavy triples and singles</td></tr>
+          <tr><td>Strength</td><td>40, 60, 80%</td><td>Sets of 5, linear progression</td></tr>
+          <tr><td>Hypertrophy</td><td>50, 75%</td><td>Sets of 8 to 12</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Reps drop as the weight rises. The aim is to feel the movement without tiring yourself for the work set.</p>
+
+    <h2>Worked example: a 225 lb work set</h2>
+    <p>Take a 225 lb top set on a 45 lb bar, with the strength style and standard plates. The ramp is:</p>
+    <ul>
+      {example.rows.filter((r) => r.kind === 'ramp').map((r) => (
+        <li><strong>{fmt(r.total)} lb ({r.pct}%):</strong> {sideText(r.list)} per side.</li>
+      ))}
+      <li><strong>{fmt(example.work)} lb (work set):</strong> {sideText(example.rows.at(-1).list)} per side.</li>
+    </ul>
+    <p>Before those, you lift the empty 45 lb bar for two sets of 5.</p>
+
+    <h2>Common work weights and their ramps</h2>
+    <p>These ramps use the strength style, a 45 lb bar and plates down to 2.5 lb. Weights are the total on the bar, starting with the empty bar.</p>
+    <div class="table-wrap" style="max-width:40rem">
+      <table>
+        <thead><tr><th scope="col">Work set</th><th scope="col">Ramp in pounds</th></tr></thead>
+        <tbody>
+          {table.map((t) => <tr><td>{t.work} lb</td><td>{t.steps}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>How many warm up sets do you need?</h2>
+    <p>It depends. Heavy squats and deadlifts usually take more steps than a light accessory lift. A lifter at 135 lb may need only the bar and one or two steps. A lifter at 405 lb may want five or six. If the bar feels slow or stiff, add a set. If you tire before the work set, cut one.</p>
+
+    <h2>Why round to plates you can load?</h2>
+    <p>Most gyms stock plates in fixed sizes. With plates down to 2.5 lb, the smallest jump in total weight is 5 lb. A ramp step of 163.5 lb is not real. The calculator gives you a weight you can put on the bar, so you do not need to do the sums mid-session.</p>
+
+    <h2>A note on safety</h2>
+    <p>This tool does arithmetic. It is not medical advice or coaching. Check that plates sit fully on the sleeve, use collars, and ask for a spotter on heavy sets. If you have pain or a health condition, talk to a doctor or qualified coach before you change your training.</p>
+    <p><a href="#tool">Back to the calculator</a></p>
+  </article>
+</section>
+
+<style is:global>
+  .prose-site .table-wrap { overflow-x: auto; margin: 0 0 1.25rem; border: 1px solid var(--line); border-radius: .75rem; max-width: 28rem; }
+  .prose-site table { width: 100%; border-collapse: collapse; font-size: .975rem; }
+  .prose-site th, .prose-site td { text-align: left; padding: .5rem .85rem; }
+  .prose-site thead th { background: var(--brand-soft); color: var(--brand-ink); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+  .prose-site tbody tr + tr td { border-top: 1px solid var(--line); }
+  .prose-site td:first-child { font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+</style>
