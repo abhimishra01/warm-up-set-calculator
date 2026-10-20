@@ -1,7 +1,7 @@
 // Known-answer tests for the warm-up ramp. Expected values are worked out by hand in the comments.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildWarmups, parsePercents, roundToStep, PRESETS, ROUND_STEPS } from '../src/lib/warmup.js';
+import { buildWarmups, parsePercents, allPercents, MAX_PERCENTS, roundToStep, PRESETS, ROUND_STEPS } from '../src/lib/warmup.js';
 import { solve, DEFAULT_PLATES } from '../src/lib/plates.js';
 
 const LB = DEFAULT_PLATES.lb; // 45 25 10 5 2.5
@@ -90,6 +90,8 @@ test('custom percent text', () => {
   assert.deepEqual(parsePercents('40, 60 80%, 100, 0, 60, abc'), [40, 60, 80]);
   assert.deepEqual(parsePercents('90;50;70'), [50, 70, 90]);
   assert.deepEqual(parsePercents(''), []);
+  assert.deepEqual(allPercents('10 20 30 40 50 60 70 80 90'), [10, 20, 30, 40, 50, 60, 70, 80, 90]);
+  assert.equal(parsePercents('10 20 30 40 50 60 70 80 90').length, MAX_PERCENTS);
   assert.equal(parsePercents('1 2 3 4 5 6 7 8 9 10').length, 8);
 });
 

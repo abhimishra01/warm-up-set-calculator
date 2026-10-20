@@ -40,7 +40,8 @@ export const ROUND_STEPS = { lb: [5, 2.5, 10], kg: [2.5, 1.25, 5] };
 export const MAX_PERCENTS = 8;
 
 // Read "40, 60 80" into [40, 60, 80]. Keeps values from 1 to 99 only, sorted, no repeats.
-export function parsePercents(text) {
+// Every valid percent in the text, sorted, with no limit on how many.
+export function allPercents(text) {
   const out = [];
   for (const part of String(text).split(/[\s,;]+/)) {
     const t = part.replace('%', '');
@@ -48,8 +49,11 @@ export function parsePercents(text) {
     const n = Number(t);
     if (n >= 1 && n <= 99 && !out.includes(n)) out.push(n);
   }
-  return out.sort((a, b) => a - b).slice(0, MAX_PERCENTS);
+  return out.sort((a, b) => a - b);
 }
+
+// The percents the tool uses: the first MAX_PERCENTS of the sorted list.
+export const parsePercents = (text) => allPercents(text).slice(0, MAX_PERCENTS);
 
 // Round to a step in whole hundredths so 2.5 and 1.25 steps stay exact. Halves round up.
 export function roundToStep(value, step) {

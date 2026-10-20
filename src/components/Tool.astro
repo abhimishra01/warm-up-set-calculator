@@ -48,6 +48,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
             <input id="custom-pcts" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="40, 60, 80" aria-describedby="custom-help"
               class="h-12 w-full rounded-xl border border-edge bg-paper px-3 font-mono text-lg font-semibold tabular-nums outline-none focus:border-brand focus:ring-2 focus:ring-brand/30 aria-[invalid=true]:border-red-600" />
             <p id="custom-help" class="mt-1 text-xs text-muted">Numbers from 1 to 99, up to 8, separated by commas or spaces.</p>
+            <p id="custom-note" role="status" class="mt-1 text-xs font-medium text-brand-ink empty:hidden"></p>
           </div>
         </fieldset>
       </div>
@@ -166,11 +167,12 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
 </style>
 <script>
   import { STEP, MAX_WORK, parseNumber, convertTarget, fmt } from '../lib/plates.js';
-  import { PRESETS, ROUND_STEPS, buildWarmups, parsePercents } from '../lib/warmup.js';
+  import { PRESETS, ROUND_STEPS, MAX_PERCENTS, buildWarmups, parsePercents, allPercents } from '../lib/warmup.js';
   import { rowsHtml, rampLine, rowName, chipsHtml, barGroupHtml, plateGroupHtml, roundGroupHtml } from '../lib/render.js';
   import { loadState, DEFAULT_CUSTOM_BAR } from '../lib/state.js';
 
   type Unit = 'lb' | 'kg';
+  const MAX_SIDE_PLATES = 10; // more than this on one sleeve is not a real load
   const KEY = 'warm-up-set-calc-v1'; // one origin is shared by all tools on GitHub Pages, so the key is specific
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const show = (id: string, on: boolean) => { $(id).classList.toggle('hidden', !on); $(id).classList.toggle('flex', on); };
@@ -192,6 +194,12 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   };
   const maxWork = () => MAX_WORK[state.unit];
 
+  // Tell the person when extra custom percents are not used.
+  function updateCustomNote() {
+    const all = allPercents(state.custom);
+    $('custom-note').textContent = all.length > MAX_PERCENTS ? `Only ${MAX_PERCENTS} percents are used. Left out: ${all.slice(MAX_PERCENTS).join(', ')}.` : '';
+  }
+
   function buildStatic() {
     const u = state.unit;
     (document.querySelector(`input[name=unit][value=${u}]`) as HTMLInputElement).checked = true;
@@ -201,6 +209,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     $<HTMLInputElement>('work').value = fmt(state.work);
     $<HTMLInputElement>('custom-bar').value = fmt(state.customBar[u]);
     $<HTMLInputElement>('custom-pcts').value = state.custom;
+    updateCustomNote();
     $('chips').innerHTML = chipsHtml(u);
     $('bar-group').innerHTML = barGroupHtml(u, state.bar[u]);
     show('custom-bar-wrap', state.bar[u] === 'custom');
@@ -263,6 +272,9 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
     $('warm').innerHTML = tableRows ? rowsHtml(res, u) : '<tr><td colspan="4" class="px-3 py-6 text-center text-muted">No sets to show yet.</td></tr>';
     const rounded = res.rows.some((r: any) => r.kind === 'ramp');
     if (rounded) $('warm-note').textContent += ` Each set is rounded to ${fmt(state.round[u])} ${u}, then to the closest load your plates make.`;
+    // Too many plates on one side usually means the plate sizes that are on cannot make a clean load.
+    const most = Math.max(0, ...res.rows.map((r: any) => r.list.reduce((a: number, p: any) => a + p.n, 0)));
+    if (most > MAX_SIDE_PLATES) $('warm-note').textContent += ` Not enough plate sizes for a clean load: a set needs ${most} plates on each side, which is more than fits on most sleeves. Turn on bigger plates, or check the weight.`;
 
     // Print header and copy text
     const label = custom ? 'Custom' : PRESETS[state.preset as keyof typeof PRESETS].label;
@@ -327,6 +339,7 @@ const presetList = [...Object.entries(PRESETS).map(([id, p]) => ({ id, label: p.
   const pctEl = $<HTMLInputElement>('custom-pcts');
   pctEl.addEventListener('input', () => {
     state.custom = pctEl.value.slice(0, 60);
+    updateCustomNote();
     pctEl.setAttribute('aria-invalid', String(state.custom.trim() !== '' && parsePercents(state.custom).length === 0));
     render();
   });
