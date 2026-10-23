@@ -21,5 +21,5 @@ export default {
   ogImage: '/og.png',
   category: 'HealthApplication',      // schema.org applicationCategory
   updated: 'October 20, 2026',        // "Last updated" date on Privacy and Terms (fixed, change by hand)
-  owner: 'Bingemind',                // name used in legal pages (person or business)
+  owner: 'Bingemind (Abhishek Mishra)',                // name used in legal pages (person or business)
 };
